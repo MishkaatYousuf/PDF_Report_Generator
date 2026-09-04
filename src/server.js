@@ -7,7 +7,8 @@ import { generatePdf } from "./generatePdf.js";
 import {
   createPendingReport,
   updateReportPath,
-  getReportById
+  getReportById,
+  getTodaysReport
 } from "./reportRepository.js";
 
 const app = express();
@@ -24,6 +25,19 @@ app.get("/health", (req, res) => {
 
 app.post("/reports", async (req, res) => {
   try {
+    const force = req.body?.force === true;
+
+    if (!force) {
+      const existingReport = getTodaysReport();
+
+      if (existingReport) {
+        return res.status(200).json({
+          id: existingReport.id,
+          file: `/reports/${existingReport.id}/file`
+        });
+      }
+    }
+
     const pendingReport = createPendingReport();
 
     const relativePath = `reports/${pendingReport.id}.pdf`;
@@ -35,14 +49,14 @@ app.post("/reports", async (req, res) => {
       relativePath
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       id: report.id,
       file: `/reports/${report.id}/file`
     });
   } catch (error) {
     console.error("Failed to generate report:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to generate report"
     });
   }

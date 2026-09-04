@@ -43,3 +43,19 @@ export function getReportById(id) {
     `)
     .get(id);
 }
+
+export function getTodaysReport() {
+  return db
+    .prepare(`
+      SELECT
+        id,
+        path,
+        created_at
+      FROM reports
+      WHERE date(created_at) = date('now')
+        AND path != 'pending'
+      ORDER BY id DESC
+      LIMIT 1
+    `)
+    .get();
+}

@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "seed": "node scripts/seed.js",
     "check-db": "node scripts/check-db.js",
-    "report-data": "node scripts/test-report-data.js"
+    "report-data": "node scripts/test-report-data.js",
+    "generate-pdf": "node scripts/generate-test-pdf.js"
   },
   "dependencies": {
     "express": "^5.1.0",

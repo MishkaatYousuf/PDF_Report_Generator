@@ -1,29 +1,12 @@
-import { DatabaseSync } from "node:sqlite";
 import { chromium } from "playwright";
 import { mkdir } from "node:fs/promises";
 
-import { getReportData } from "./reportData.js";
+import { getReportData, getAllOrders } from "./reportData.js";
 import { buildReportHtml } from "./reportTemplate.js";
 
-export async function generateTestPdf() {
+export async function generatePdf(outputPath) {
   const reportData = getReportData();
-
-  const db = new DatabaseSync("report.db");
-
-  const orders = db
-    .prepare(`
-      SELECT
-        id,
-        customer,
-        product,
-        amount,
-        created_at
-      FROM orders
-      ORDER BY created_at DESC, id DESC
-    `)
-    .all();
-
-  db.close();
+  const orders = getAllOrders();
 
   const html = buildReportHtml(reportData, orders);
 
@@ -39,7 +22,7 @@ export async function generateTestPdf() {
     });
 
     await page.pdf({
-      path: "reports/test.pdf",
+      path: outputPath,
       format: "A4",
       printBackground: true
     });
@@ -47,5 +30,5 @@ export async function generateTestPdf() {
     await browser.close();
   }
 
-  return "reports/test.pdf";
+  return outputPath;
 }

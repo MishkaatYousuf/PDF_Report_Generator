@@ -1,4 +1,14 @@
 import express from "express";
+import path from "node:path";
+
+import "./database.js";
+
+import { generatePdf } from "./generatePdf.js";
+import {
+  createPendingReport,
+  updateReportPath,
+  getReportById
+} from "./reportRepository.js";
 
 const app = express();
 
@@ -8,7 +18,88 @@ app.use(express.json());
 
 app.get("/health", (req, res) => {
   res.status(200).json({
-    status: "ok",
+    status: "ok"
+  });
+});
+
+app.post("/reports", async (req, res) => {
+  try {
+    const pendingReport = createPendingReport();
+
+    const relativePath = `reports/${pendingReport.id}.pdf`;
+
+    await generatePdf(relativePath);
+
+    const report = updateReportPath(
+      pendingReport.id,
+      relativePath
+    );
+
+    res.status(201).json({
+      id: report.id,
+      file: `/reports/${report.id}/file`
+    });
+  } catch (error) {
+    console.error("Failed to generate report:", error);
+
+    res.status(500).json({
+      error: "Failed to generate report"
+    });
+  }
+});
+
+app.get("/reports/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(404).json({
+      error: "Report not found"
+    });
+  }
+
+  const report = getReportById(id);
+
+  if (!report) {
+    return res.status(404).json({
+      error: "Report not found"
+    });
+  }
+
+  res.status(200).json({
+    id: report.id,
+    path: report.path,
+    created_at: report.created_at,
+    file: `/reports/${report.id}/file`
+  });
+});
+
+app.get("/reports/:id/file", (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(404).json({
+      error: "Report not found"
+    });
+  }
+
+  const report = getReportById(id);
+
+  if (!report) {
+    return res.status(404).json({
+      error: "Report not found"
+    });
+  }
+
+  const absolutePath = path.resolve(report.path);
+
+  res.sendFile(absolutePath, (error) => {
+    if (error && !res.headersSent) {
+      console.error("Failed to send report:", error);
+
+      res.status(500).json({
+        error: "Failed to send report"
+      });
+    }
   });
 });
 

@@ -1,8 +1,6 @@
-import { DatabaseSync } from "node:sqlite";
+import db from "./database.js";
 
 export function getReportData() {
-  const db = new DatabaseSync("report.db");
-
   const totalOrders = db
     .prepare(`
       SELECT COUNT(*) AS total_orders
@@ -42,12 +40,25 @@ export function getReportData() {
     `)
     .all();
 
-  db.close();
-
   return {
     totalOrders: totalOrders.total_orders,
     totalRevenue: totalRevenue.total_revenue ?? 0,
     topProducts,
     ordersPerDay
   };
+}
+
+export function getAllOrders() {
+  return db
+    .prepare(`
+      SELECT
+        id,
+        customer,
+        product,
+        amount,
+        created_at
+      FROM orders
+      ORDER BY created_at DESC, id DESC
+    `)
+    .all();
 }

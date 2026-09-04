@@ -629,9 +629,9 @@ The PDF demonstrates:
 - Repeating table headers
 - Table rows that remain together across page breaks
 
-```markdown
+
 ![Generated PDF report](docs/report-preview.png)
-```
+
 
 ---
 
